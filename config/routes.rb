@@ -798,6 +798,8 @@ Rails.application.routes.draw do
         post :delete_token
       end
     end
+
+    resources :departments, only: %i[index]
   end
 
   resource :workflows, only: %i[edit update show] do
