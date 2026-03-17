@@ -29,18 +29,8 @@
 #++
 
 module Admin
-  class DepartmentsController < ::ApplicationController
-    include OpTurbo::ComponentStream
-
-    layout "admin"
-
-    menu_item :departments
-
-    # TODO: We will check for users permission here
-    before_action :require_admin
-
-    def index
-      @groups = Group.organizational_units
+  module Departments
+    class PageHeaderComponent < ApplicationComponent
     end
   end
 end

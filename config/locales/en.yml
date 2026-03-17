@@ -3893,6 +3893,11 @@ en:
   label_custom_pdf_export_settings: "Custom PDF export settings"
   label_custom_favicon: "Custom favicon"
   label_custom_touch_icon: "Custom touch icon"
+  label_departments: "Organization"
+  label_departments_description_html: >
+    Define your company’s structure by creating departments and sub-departments in a hierarchical way. This allows you
+    to reflect reporting lines and maintain a clear, structured overview of your organization within OpenProject. You
+    can also import an existing organization structure through <a href="#">LDAP group synchronisation</a>.
   label_logout: "Sign out"
   label_mapping_for: "Mapping for: %{attribute}"
   label_main_menu: "Side Menu"

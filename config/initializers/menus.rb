@@ -365,10 +365,10 @@ Redmine::MenuManager.map :admin_menu do |menu|
             caption: :label_group_plural,
             parent: :users_and_permissions
 
-  menu.push :organization,
+  menu.push :departments,
             { controller: "/admin/departments" },
             if: ->(_) { User.current.admin? },
-            caption: :label_organization,
+            caption: :label_departments,
             parent: :users_and_permissions
 
   menu.push :roles,

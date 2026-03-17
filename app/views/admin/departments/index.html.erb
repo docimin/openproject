@@ -1,1 +1,3 @@
-<pre><%= @groups.pretty_inspect %></pre>
+<%= render(Admin::Departments::PageHeaderComponent.new) %>
+
+<%= render(Admin::Departments::DepartmentsPageComponent.new(groups: @groups)) %>

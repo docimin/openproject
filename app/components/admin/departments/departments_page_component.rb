@@ -29,18 +29,17 @@
 #++
 
 module Admin
-  class DepartmentsController < ::ApplicationController
-    include OpTurbo::ComponentStream
+  module Departments
+    class DepartmentsPageComponent < ApplicationComponent
+      include OpTurbo::Streamable
+      include OpPrimer::ComponentHelpers
 
-    layout "admin"
+      attr_reader :groups
 
-    menu_item :departments
-
-    # TODO: We will check for users permission here
-    before_action :require_admin
-
-    def index
-      @groups = Group.organizational_units
+      def initialize(groups:)
+        super()
+        @groups = groups
+      end
     end
   end
 end
