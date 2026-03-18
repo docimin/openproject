@@ -123,6 +123,8 @@ module Pages
                        end
 
       moved_element.native.drag_to(target_element.native, delay: 0.1)
+    rescue Capybara::Cuprite::ObsoleteNode
+      retry
     end
 
     def fold_backlog(backlog)
