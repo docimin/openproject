@@ -74,6 +74,18 @@ module Agile
       Day.working.from_range(from: start_date, to: finish_date).count
     end
 
+    def owned_by?(project)
+      project_id == project.id
+    end
+
+    def shared_with?(project)
+      self.class.for_project(project).exists?(id:) && !owned_by?(project)
+    end
+
+    def visible_to?(project)
+      self.class.for_project(project).exists?(id:)
+    end
+
     private
 
     # TODO: consider moving this validation to the database level to ensure data integrity.
