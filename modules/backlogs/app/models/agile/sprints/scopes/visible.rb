@@ -34,16 +34,78 @@ module Agile::Sprints::Scopes
 
     class_methods do
       # Returns all sprints the user is allowed to see.
-      # A sprint is visible if it can be seen via for_project in any project
-      # where the user has the :view_sprints permission (including sprints shared
-      # via sprint source configuration or work packages).
+      # A sprint is visible if its project is a sprint source for any project
+      # where the user has the :view_sprints permission (accounting for sprint sharing
+      # configuration), or if it has work packages in such a project.
       def visible(user = User.current)
-        # This currently requires two queries, one for fetching the allowed projects
-        # and one for fetching the sprints in those projects.
-        # The alternative would be much more complex to implement.
-        Project.allowed_to(user, :view_sprints).to_a.inject(none) do |scope, project|
-          scope.or(for_project(project))
-        end
+        allowed_projects = Project.allowed_to(user, :view_sprints)
+        source_project_ids = sprint_source_projects_for(allowed_projects)
+        from_wps = WorkPackage.where(project: allowed_projects).where.not(sprint_id: nil)
+
+        where(arel_table[:project_id].in(source_project_ids))
+          .or(where(id: from_wps.select(:sprint_id)))
+      end
+
+      private
+
+      # Returns an Arel union node of project IDs that are sprint sources for any
+      # project in +projects+. Covers three cases:
+      #
+      # 1. Non-receiving allowed projects (sprint_source = self)
+      # 2. The closest share_subprojects ancestor of each receiving allowed project
+      # 3. The global sharer for receiving projects that have no share_subprojects ancestor
+      def sprint_source_projects_for(projects)
+        share_subprojects = Projects::SprintSharing::SHARE_SUBPROJECTS
+
+        receiving_in_allowed = projects.receive_shared_sprints
+        receiving_ids_sql = receiving_in_allowed.select(:id).to_sql
+
+        # Case 1: Non-receiving allowed projects (sprint_source = self)
+        direct = projects
+          .where("settings->>'sprint_sharing' IS DISTINCT FROM ?",
+                 Projects::SprintSharing::RECEIVE_SHARED)
+          .select(:id)
+
+        # Case 2: Closest share_subprojects ancestor for each receiving project.
+        # Project S is a source if there EXISTS a receiving project R in projects
+        # such that S is an ancestor of R and no closer share_subprojects ancestor exists.
+        closest_ancestors = Project.share_sprints_with_subprojects.where(<<~SQL).select(:id)
+          EXISTS (
+            SELECT 1 FROM projects receiving
+            WHERE receiving.id IN (#{receiving_ids_sql})
+              AND projects.lft < receiving.lft
+              AND projects.rgt > receiving.rgt
+              AND NOT EXISTS (
+                SELECT 1 FROM projects closer
+                WHERE closer.settings->>'sprint_sharing' = '#{share_subprojects}'
+                  AND closer.lft < receiving.lft
+                  AND closer.rgt > receiving.rgt
+                  AND closer.lft > projects.lft
+              )
+          )
+        SQL
+
+        # Case 3: Global sharer for receiving projects that have no share_subprojects ancestor.
+        # The global sharer is wrapped in WHERE IN to avoid a LIMIT clause inside a UNION member.
+        global_sharer = Project
+          .where(id: Project.global_sprint_sharer_relation)
+          .where(<<~SQL).select(:id)
+            EXISTS (
+              SELECT 1 FROM projects receiving
+              WHERE receiving.id IN (#{receiving_ids_sql})
+                AND NOT EXISTS (
+                  SELECT 1 FROM projects anc
+                  WHERE anc.settings->>'sprint_sharing' = '#{share_subprojects}'
+                    AND anc.lft < receiving.lft
+                    AND anc.rgt > receiving.rgt
+                )
+            )
+          SQL
+
+        Arel::Nodes::Union.new(
+          direct.arel,
+          Arel::Nodes::Union.new(closest_ancestors.arel, global_sharer.arel)
+        )
       end
     end
   end
