@@ -72,6 +72,9 @@ OpenProject::FeatureDecisions.add :scrum_projects,
 OpenProject::FeatureDecisions.add :user_working_times,
                                   description: "Enables tracking of user working hours and non-working days."
 
+OpenProject::FeatureDecisions.add :departments,
+                                  description: "Enables the management of departments within the organization."
+
 OpenProject::FeatureDecisions.add :semantic_work_package_ids,
                                   description: "Enables the use of semantic work package IDs, " \
                                                "in the schema <project identifier>-<sequence number>. " \
