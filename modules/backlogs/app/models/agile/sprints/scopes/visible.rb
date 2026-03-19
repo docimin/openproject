@@ -34,11 +34,16 @@ module Agile::Sprints::Scopes
 
     class_methods do
       # Returns all sprints the user is allowed to see.
-      # A sprint is visible if the user has the :view_sprints permission
-      # in the project the sprint belongs to.
+      # A sprint is visible if it can be seen via for_project in any project
+      # where the user has the :view_sprints permission (including sprints shared
+      # via sprint source configuration or work packages).
       def visible(user = User.current)
-        joins(:project)
-          .merge(Project.allowed_to(user, :view_sprints))
+        # This currently requires two queries, one for fetching the allowed projects
+        # and one for fetching the sprints in those projects.
+        # The alternative would be much more complex to implement.
+        Project.allowed_to(user, :view_sprints).to_a.inject(none) do |scope, project|
+          scope.or(for_project(project))
+        end
       end
     end
   end

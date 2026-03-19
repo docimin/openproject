@@ -35,7 +35,7 @@ module OpenProject::Backlogs
     end
 
     def available?
-      scrum_projects_active? && backlogs_enabled?
+      scrum_projects_active? && allowed?
     end
 
     def type
@@ -63,8 +63,12 @@ module OpenProject::Backlogs
 
     private
 
-    def backlogs_enabled?
-      project.nil? || project.module_enabled?(:backlogs)
+    def allowed?
+      if project.present?
+        User.current.allowed_in_project?(:view_sprints, project)
+      else
+        User.current.allowed_in_any_project?(:view_sprints)
+      end
     end
 
     def scrum_projects_active?

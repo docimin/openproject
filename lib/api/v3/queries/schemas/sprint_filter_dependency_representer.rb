@@ -33,12 +33,14 @@ module API
     module Queries
       module Schemas
         class SprintFilterDependencyRepresenter < FilterDependencyRepresenter
-          def href_callback; end
+          def href_callback
+            api_v3_paths.project_sprints(filter.project.id)
+          end
 
           private
 
           def type
-            "[]Integer"
+            "[]Sprint"
           end
         end
       end
