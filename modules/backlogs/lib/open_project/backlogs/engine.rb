@@ -249,8 +249,8 @@ module OpenProject::Backlogs
       ::Type.add_default_mapping(:other, :position)
 
       ::Queries::Register.register(::Query) do
+        filter Queries::WorkPackages::Filter::SprintFilter
         filter OpenProject::Backlogs::WorkPackageFilter
-        filter OpenProject::Backlogs::SprintFilter
 
         select OpenProject::Backlogs::QueryBacklogsSelect
       end
