@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-#-- copyright
+# -- copyright
 # OpenProject is an open source project management software.
 # Copyright (C) the OpenProject GmbH
 #
@@ -26,29 +26,21 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 # See COPYRIGHT and LICENSE files for more details.
-#++
+# ++
 
-module Sprints
-  class CreateContract < BaseContract
-    validate :user_allowed_to_create
-    validate :no_receiving_project
+require "spec_helper"
+require "contracts/shared/model_contract_shared_context"
+require_relative "shared_contract_examples"
 
-    private
+RSpec.describe Sprints::UpdateContract do
+  include_context "as sprint contract"
 
-    def user_allowed_to_create
-      return if model.project.nil?
-
-      unless user.allowed_in_project?(:create_sprints, model.project)
-        errors.add :base, :error_unauthorized
-      end
-    end
-
-    def no_receiving_project
-      return if model.project.nil?
-
-      if model.project.receive_shared_sprints?
-        errors.add :project, :receiving_sprints
-      end
-    end
+  let(:sprint) do
+    build_stubbed(:agile_sprint,
+                  name: sprint_name,
+                  project: sprint_project,
+                  start_date: sprint_start_date,
+                  finish_date: sprint_finish_date,
+                  status: sprint_status)
   end
 end

@@ -57,6 +57,7 @@ en:
     errors:
       models:
         project:
+          receiving_sprints: "is receiving shared sprints. Own sprints cannot be created."
           attributes:
             sprint_sharing:
               share_all_projects_already_taken: "cannot be set because project \"%{name}\" is already sharing with all projects."

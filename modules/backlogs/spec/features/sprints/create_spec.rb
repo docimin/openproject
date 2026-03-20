@@ -32,15 +32,8 @@ require "spec_helper"
 require_relative "../../support/pages/backlogs"
 
 RSpec.describe "Create", :js do
-  let(:project) { create(:project) }
-  let(:all_permissions) { %i[view_sprints view_work_packages create_sprints] }
-  let(:permissions) { all_permissions }
-  let(:user) do
-    create(:user, member_with_permissions: { project => permissions })
-  end
-  let(:backlogs_page) { Pages::Backlogs.new(project) }
-
-  let!(:initial_sprint) do
+  shared_let(:project) { create(:project) }
+  shared_let(:initial_sprint) do
     create(:agile_sprint,
            project:,
            name: "Initial sprint",
@@ -48,30 +41,14 @@ RSpec.describe "Create", :js do
            finish_date: Date.new(2025, 9, 15))
   end
 
-  let(:story_type) do
-    create(:type_feature)
-  end
-  let(:story_type2) do
-    type = create(:type)
+  let(:all_permissions) { %i[view_sprints view_work_packages create_sprints] }
+  let(:permissions) { all_permissions }
 
-    project.types << type
+  let(:backlogs_page) { Pages::Backlogs.new(project) }
 
-    type
-  end
-  let(:inactive_story_type) do
-    create(:type)
-  end
-
-  let(:task_type) do
-    type = create(:type_task)
-    project.types << type
-
-    type
-  end
+  current_user { create(:user, member_with_permissions: { project => permissions }) }
 
   before do
-    login_as(user)
-
     backlogs_page.visit!
   end
 
@@ -154,7 +131,9 @@ RSpec.describe "Create", :js do
       end
 
       describe "proposed sprint names" do
-        let!(:initial_sprint) { nil } # override so that initial sprint is not present
+        before do
+          Agile::Sprint.delete_all
+        end
 
         it "prefilled with 'Sprint 1' if there are no previous sprints" do
           backlogs_page.open_create_sprint_dialog
@@ -183,6 +162,15 @@ RSpec.describe "Create", :js do
 
     context "without the necessary permissions" do
       let(:permissions) { all_permissions - [:create_sprints] }
+
+      it "is missing the 'new sprint' button" do
+        expect(page).to have_no_button "Create"
+        expect(page).not_to have_test_selector("op-sprints--new-sprint-button")
+      end
+    end
+
+    context "with the project receiving sprints from another project" do
+      let(:project) { create(:project, sprint_sharing: Projects::SprintSharing::RECEIVE_SHARED) }
 
       it "is missing the 'new sprint' button" do
         expect(page).to have_no_button "Create"
