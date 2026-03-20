@@ -150,7 +150,7 @@ class MessagesController < ApplicationController
     content << (text.to_s.strip.gsub(%r{<pre>(.+?)</pre>}m, "[...]").gsub('"', '\"').gsub(/(\r?\n|\r\n?)/, "\n> ") + "\n\n")
 
     respond_to do |format|
-      format.json { render json: { subject:, content: } }
+      format.json { render json: { subject:, content: }, escape: true }
       format.any { head :not_acceptable }
     end
   end
